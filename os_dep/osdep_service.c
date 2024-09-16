@@ -2226,7 +2226,7 @@ static int retriveFromFile(const char *path, u8 *buf, u32 sz)
 static int storeToFile(const char *path, u8 *buf, u32 sz)
 {
 	int ret = 0;
-	#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 10, 0))
+	#ifdef set_fs
 	mm_segment_t oldfs;
 	#endif
 	struct file *fp;
@@ -2235,14 +2235,13 @@ static int storeToFile(const char *path, u8 *buf, u32 sz)
 		ret = openFile(&fp, path, O_CREAT | O_WRONLY, 0666);
 		if (0 == ret) {
 			RTW_INFO("%s openFile path:%s fp=%p\n", __FUNCTION__, path , fp);
-
-			#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 10, 0))
+			#ifdef set_fs
 			oldfs = get_fs();
 			set_fs(KERNEL_DS);
-			#endif
 			ret = writeFile(fp, buf, sz);
-			#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 10, 0))
 			set_fs(oldfs);
+			#else
+			ret = writeFile(fp, buf, sz);
 			#endif
 			closeFile(fp);
 
